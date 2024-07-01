@@ -1,0 +1,54 @@
+---
+- name: "All servers"
+  hosts: all
+  become: true
+  vars_files:
+    - vars/main.yml
+  tasks:
+    - name: "Common OS tasks"
+      ansible.builtin.include_role:
+        name: os_common
+
+- name: "PROXY SERVERS"
+  hosts: proxy
+  become: true
+  vars_files:
+    - vars/main.yml
+  tasks:
+    - name: "Install HAproxy"
+      ansible.builtin.include_role:
+        name: haproxy_install
+
+- name: INSTALL MICROK8S
+  hosts: kube
+  become: true
+  vars_files:
+    - vars/main.yml
+  tasks:
+    - name: "Install MicroK8s"
+      ansible.builtin.include_role:
+        name: microk8s_install
+
+- name: GENERATE TOKEN
+  hosts: kube_master
+  become: true
+  vars_files:
+    - vars/main.yml
+  tasks:
+    - name: "Generate token"
+      ansible.builtin.include_role:
+        name: microk8s_generate_token
+
+- name: JOIN NODES
+  hosts: kube_node
+  become: true
+  vars_files:
+    - vars/main.yml
+  tasks:
+    - name: "Join nodes"
+      ansible.builtin.include_role:
+        name: microk8s_join_node
+
+    - name: Open published port
+      ansible.builtin.include_role:
+        name: firewalld_open_port
